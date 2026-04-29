@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "skills": {
+    "create-specification": {
+      "source": "C:\\Users\\xalex\\Documents\\Inteligencia_artificial\\Mis_skills",
+      "sourceType": "local",
+      "computedHash": "45b9ef98b0fb82ba0e1aee65dfb464fa1f8494a14a557b9788d73aae87e9e618"
+    },
+    "git-commit": {
+      "source": "C:\\Users\\xalex\\Documents\\Inteligencia_artificial\\Mis_skills",
+      "sourceType": "local",
+      "computedHash": "aa141d44dbfd723dd49b41e4003121a10ed9547ffc78b04cb57ef77521e4a784"
+    },
+    "planning-and-task-breakdown": {
+      "source": "C:\\Users\\xalex\\Documents\\Inteligencia_artificial\\Mis_skills",
+      "sourceType": "local",
+      "computedHash": "f601e4d62842168e55e1c26b3edc6773a7c574770172ebcd220d99e22f72f4ec"
+    },
+    "python-uv": {
+      "source": "C:\\Users\\xalex\\Documents\\Inteligencia_artificial\\Mis_skills",
+      "sourceType": "local",
+      "computedHash": "49d1422a9a01e41bcb53f0effac888ae9de9f31a27fc58abf901807cfa50320f"
+    },
+    "systematic-debugging": {
+      "source": "C:\\Users\\xalex\\Documents\\Inteligencia_artificial\\Mis_skills",
+      "sourceType": "local",
+      "computedHash": "72e9ab72627e4fd8ed26a582e82309a98ecdc4f6e1c99418430ac05682c9e91d"
+    }
+  }
+}
