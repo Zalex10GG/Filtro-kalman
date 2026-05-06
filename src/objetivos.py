@@ -94,7 +94,7 @@ def construir_matrizes_cv():
     """
     Construye las matrices del modelo CV (Constant Velocity).
 
-    El modelo CV假设 velocidad constante con ruido de proceso en la aceleración.
+    El modelo CV, suponer velocidad constante con ruido de proceso en la aceleración.
     Estado: [x, y, vx, vy]
     Modelo: x_k = A @ x_{k-1} + ruido
 
@@ -138,7 +138,7 @@ def construir_matrizes_ca():
     """
     Construye las matrices del modelo CA (Constant Acceleration).
 
-    El modelo CA假设 aceleración constante con ruido de proceso en el jerk.
+    El modelo CA, suponer aceleración constante con ruido de proceso en el jerk.
     Estado: [x, y, vx, vy, ax, ay]
 
     Returns:
