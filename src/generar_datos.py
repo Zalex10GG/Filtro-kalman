@@ -28,62 +28,52 @@ def generar_trayectoria(fijos):
             - trayectoria: Matriz de tamaño n×2 con posiciones [x, y] en cada paso.
             - velocidades: Vector de tamaño n con velocidad en m/s en cada paso.
     """
-    # Inicialización: primer punto es RATAS, velocidad inicial V1
-    trayectoria = [fijos[0]]
-    velocidades = [cnfg.V1_MS]
+    dist_total_1 = np.linalg.norm(fijos[1] - fijos[0])
+    dir_1 = (fijos[1] - fijos[0]) / dist_total_1
+    t1_total = dist_total_1 / cnfg.V1_MS
 
-    # Tramo 1: RATAS -> NUBLO a velocidad constante
-    dist_total_1 = np.linalg.norm(fijos[1] - fijos[0])  # Distancia total del tramo
-    dir_1 = (fijos[1] - fijos[0]) / dist_total_1  # Vector director normalizado
-    dist_recorrida = 0.0
-
-    while dist_recorrida < dist_total_1:
-        # Avanzar DT segundos a velocidad V1
-        dist_recorrida += cnfg.V1_MS * cnfg.DT
-        if dist_recorrida >= dist_total_1:
-            # Llegamos al waypoint NUBLO
-            trayectoria.append(fijos[1])
-            velocidades.append(cnfg.V1_MS)
-            break
-        # Calcular posición actual a lo largo del tramo
-        trayectoria.append(fijos[0] + dist_recorrida * dir_1)
-        velocidades.append(cnfg.V1_MS)
-
-    # Tramo 2: NUBLO -> ROVAK con aceleración
     dist_total_2 = np.linalg.norm(fijos[2] - fijos[1])
     dir_2 = (fijos[2] - fijos[1]) / dist_total_2
-    dist_recorrida_f2 = 0.0
-    vel_actual = cnfg.V1_MS  # Velocidad al inicio del tramo
 
-    while dist_recorrida_f2 < dist_total_2:
-        # Determinar cuánto avanzamos en este paso DT
-        if vel_actual < cnfg.V2_MS:
-            # Todavía estamos acelerando
-            t_to_v2 = (cnfg.V2_MS - vel_actual) / cnfg.ACCEL
-            if t_to_v2 < cnfg.DT:
-                # Alcanzamos V2 antes de terminar el paso DT
-                # Distancia = distancia hasta V2 + distancia a V2 constante
-                paso_dist = vel_actual * t_to_v2 + 0.5 * cnfg.ACCEL * (t_to_v2**2) + cnfg.V2_MS * (cnfg.DT - t_to_v2)
-                vel_actual = cnfg.V2_MS
-            else:
-                # Continuamos acelerando durante todo el paso DT
-                paso_dist = vel_actual * cnfg.DT + 0.5 * cnfg.ACCEL * (cnfg.DT**2)
-                vel_actual += cnfg.ACCEL * cnfg.DT
+    # Cálculos analíticos de tiempos para el tramo 2
+    t_accel = (cnfg.V2_MS - cnfg.V1_MS) / cnfg.ACCEL
+    dist_accel = cnfg.V1_MS * t_accel + 0.5 * cnfg.ACCEL * (t_accel**2)
+
+    if dist_total_2 >= dist_accel:
+        dist_const_2 = dist_total_2 - dist_accel
+        t2_const = dist_const_2 / cnfg.V2_MS
+        t2_total = t_accel + t2_const
+    else:
+        # Si la aceleración no se llega a completar antes de ROVAK
+        t_accel = (-cnfg.V1_MS + np.sqrt(cnfg.V1_MS**2 + 2*cnfg.ACCEL*dist_total_2)) / cnfg.ACCEL
+        t2_total = t_accel
+
+    t_total = t1_total + t2_total
+
+    trayectoria = []
+    velocidades = []
+    
+    t = 0.0
+    # Muestreo estricto cada DT, sin saltos anómalos ni frenazos artificiales
+    while t <= t_total:
+        if t <= t1_total:
+            # En el primer tramo
+            pos = fijos[0] + dir_1 * (cnfg.V1_MS * t)
+            vel = cnfg.V1_MS
         else:
-            # Ya alcanzamos la velocidad máxima, avanzamos a V2 constante
-            paso_dist = cnfg.V2_MS * cnfg.DT
+            # En el segundo tramo
+            t_in_2 = t - t1_total
+            if t_in_2 <= t_accel:
+                dist_in_2 = cnfg.V1_MS * t_in_2 + 0.5 * cnfg.ACCEL * (t_in_2**2)
+                vel = cnfg.V1_MS + cnfg.ACCEL * t_in_2
+            else:
+                dist_in_2 = dist_accel + cnfg.V2_MS * (t_in_2 - t_accel)
+                vel = cnfg.V2_MS
+            pos = fijos[1] + dir_2 * dist_in_2
 
-        dist_recorrida_f2 += paso_dist
-
-        if dist_recorrida_f2 >= dist_total_2:
-            # Llegamos al waypoint ROVAK
-            trayectoria.append(fijos[2])
-            velocidades.append(vel_actual)
-            break
-
-        # Calcular posición actual a lo largo del tramo
-        trayectoria.append(fijos[1] + dist_recorrida_f2 * dir_2)
-        velocidades.append(vel_actual)
+        trayectoria.append(pos)
+        velocidades.append(vel)
+        t += cnfg.DT
 
     return np.array(trayectoria), np.array(velocidades)
 
