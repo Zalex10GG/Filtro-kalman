@@ -11,6 +11,8 @@ def main():
     """Ejecuta la simulación y genera todas las gráficas de resultados."""
     grf.ejecutar()
 
+    # --- GENERAR MEDIDAS RADAR CON RUIDO ---
+    medidas_radar = generar_radar(medidas_reales, sigma_rho, sigma_theta)
 
 if __name__ == "__main__":
     main()
