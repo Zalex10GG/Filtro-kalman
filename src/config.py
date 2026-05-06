@@ -29,7 +29,7 @@ PTO_NUBLO = "423958N 0045920W"
 PTO_ROVAK = "424431N 0055123W"
 
 #: Altitud de vuelo de las aeronaves en metros (FL100 = 10000 ft).
-H_VUELO = 10000.0
+H_VUELO = 10000.0 * 0.3048
 
 #: Paso de tiempo de simulación en segundos. Cada 4s se procesa una medida del radar.
 DT = 4.0
@@ -52,6 +52,12 @@ SIGMA_THETA_DEG = 0.068
 #: Desviación estándar del error angular del radar en radianes. Se calcula en init().
 SIGMA_THETA = None
 
+#: Declinación magnética en grados (valor aproximado para España).
+DECLINACION_MAG_DEG = -0.6
+
+#: Declinación magnética en radianes. Se calcula en init().
+DECLINACION_MAG = None
+
 #: Valor diagonal de la covarianza inicial del estado (P0) para posición.
 #: Indica alta incertidumbre inicial sobre la posición exacta.
 P0_DIAG = 1e6
@@ -72,9 +78,10 @@ def init():
     Se llama automáticamente al importar el módulo para convertir
     SIGMA_THETA de grados a radianes.
     """
-    global SIGMA_THETA
+    global SIGMA_THETA, DECLINACION_MAG
     import numpy as np
     SIGMA_THETA = np.radians(SIGMA_THETA_DEG)
+    DECLINACION_MAG = np.radians(DECLINACION_MAG_DEG)
 
 
 init()

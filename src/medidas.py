@@ -30,9 +30,9 @@ def calcular_z_y_r(rho_m, theta_m):
             - z_k: Vector [x, y] en metros (medida desesgada en Cartesianas).
             - R_k: Matriz de covarianza de tamaño 2×2 de la medida convertida.
     """
-    # 1. Convertir medidas polares a Cartesianas
-    x_m = rho_m * np.cos(theta_m)
-    y_m = rho_m * np.sin(theta_m)
+    # 1. Convertir medidas polares a Cartesianas (usando convención de azimut radar)
+    x_m = rho_m * np.sin(theta_m)
+    y_m = rho_m * np.cos(theta_m)
 
     # Parámetros de ruido del radar
     drho = cnfg.SIGMA_RHO  # σ_r
@@ -40,18 +40,20 @@ def calcular_z_y_r(rho_m, theta_m):
     stheta2 = dtheta ** 2  # σ_θ²
 
     # 2. Calcular sesgo μ_a según Ecuación 12 de Lerro & Bar-Shalom
-    # μ_a = [r_m cos(θ_m)(e^{-σ²} - e^{-σ²/2}), r_m sin(θ_m)(e^{-σ²} - e^{-σ²/2})]
+    # μ_a = [r_m sin(θ_m)(e^{-σ²} - e^{-σ²/2}), r_m cos(θ_m)(e^{-σ²} - e^{-σ²/2})]
     exp_neg = np.exp(-stheta2)
     exp_neg_half = np.exp(-stheta2 / 2)
     bias_factor = exp_neg - exp_neg_half
     mu_a = np.array([
-        rho_m * np.cos(theta_m) * bias_factor,
-        rho_m * np.sin(theta_m) * bias_factor
+        rho_m * np.sin(theta_m) * bias_factor,
+        rho_m * np.cos(theta_m) * bias_factor
     ])
 
     # 3. Calcular covarianza R_a según Ecuaciones 13a-13c de Lerro & Bar-Shalom
-    c = np.cos(theta_m)
-    s = np.sin(theta_m)
+    # Para mantener la matemática original (donde θ era medido desde el eje X),
+    # intercambiamos sin y cos para la convención de Azimut
+    c = np.sin(theta_m)
+    s = np.cos(theta_m)
     c2 = c ** 2
     s2 = s ** 2
 

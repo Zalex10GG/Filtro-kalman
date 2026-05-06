@@ -206,7 +206,7 @@ def ejecutar_cv(z_k_seq, R_k_seq, x0, P0, A, H, Q):
         kf.predict()
         kf.update(z, R)
         estados.append(kf.x.copy())
-        trazas_p.append(np.trace(kf.P))
+        trazas_p.append(np.trace(kf.P[:2, :2]))
     return np.array(estados), np.array(trazas_p)
 
 
@@ -235,7 +235,7 @@ def ejecutar_ca(z_k_seq, R_k_seq, x0, P0, A, H, Q):
         kf.predict()
         kf.update(z, R)
         estados.append(kf.x.copy())
-        trazas_p.append(np.trace(kf.P))
+        trazas_p.append(np.trace(kf.P[:2, :2]))
     return np.array(estados), np.array(trazas_p)
 
 

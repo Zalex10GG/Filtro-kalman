@@ -9,6 +9,7 @@ Proporciona funciones para convertir entre diferentes sistemas de coordenadas:
 """
 
 import numpy as np
+import src.config as cnfg
 
 #: Semieje mayor del elipsoide WGS84 en metros.
 A = 6378137.0
@@ -95,7 +96,16 @@ def geocentric_to_local(P_geo, lat_ref, lon_ref, h_ref):
         [-np.sin(lat_ref)*np.cos(lon_ref), -np.sin(lat_ref)*np.sin(lon_ref), np.cos(lat_ref)],
         [np.cos(lat_ref)*np.cos(lon_ref),  np.cos(lat_ref)*np.sin(lon_ref), np.sin(lat_ref)]
     ])
-    return S @ (P_geo - T)
+    P_local = S @ (P_geo - T)
+    
+    # Aplicar declinación magnética para alinear el eje Y con el Norte Magnético
+    D = cnfg.DECLINACION_MAG
+    R_mag = np.array([
+        [np.cos(D), -np.sin(D), 0.0],
+        [np.sin(D),  np.cos(D), 0.0],
+        [0.0,        0.0,       1.0]
+    ])
+    return R_mag @ P_local
 
 
 def cartesian_to_radar(x, y):
@@ -112,5 +122,6 @@ def cartesian_to_radar(x, y):
             - theta: Ángulo en radianes [-π, π].
     """
     rho = np.sqrt(x**2 + y**2)
-    theta = np.arctan2(y, x)
+    # Azimut del radar: medido desde el Norte (eje Y) en sentido horario
+    theta = np.arctan2(x, y)
     return rho, theta

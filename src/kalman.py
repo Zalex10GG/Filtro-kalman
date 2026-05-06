@@ -63,5 +63,6 @@ class KalmanFilter:
         y = z - self.H @ self.x
         # Actualización del estado
         self.x = self.x + K @ y
-        # Actualización de la covarianza (forma de Joseph)
-        self.P = (np.eye(len(self.x)) - K @ self.H) @ self.P
+        # Actualización de la covarianza (forma de Joseph real)
+        I_KH = np.eye(len(self.x)) - K @ self.H
+        self.P = I_KH @ self.P @ I_KH.T + K @ R @ K.T
