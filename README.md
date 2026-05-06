@@ -5,7 +5,7 @@ Simulación de seguimiento de trayectorias aéreas mediante filtros de Kalman li
 ## Características
 
 - **Modelos dinámicos**: CV (4 estados) y CA (6 estados)
-- **Debiasing de medidas**: Fórmulas exactas de Lerro & Bar-Shalom (Ec. 12, 13a-13c)
+- **Debiasing de medidas**: Fórmulas exactas de Lerro & Bar-Shalom 
 - **Transformaciones geodésicas**: WGS84 con conversión a sistema local ENU
 - **Visualización**: Gráficas estilo seaborn con exportación PNG y SVG
 - **Waypoints reales**: RATAS, NUBLO, ROVAK con radar VALDES
