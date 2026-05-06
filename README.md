@@ -1,6 +1,6 @@
 # Filtro de Kalman para Control de Tráfico Aéreo
 
-Simulación de seguimiento de trayectorias aéreas mediante filtros de Kalman lineales con modelos CV (Constant Velocity) y CA (Constant Acceleration). Las medidas provienen de un radar en coordenadas polares (rho, theta) y se procesan usando el método de desesgo consistente de Lerro & Bar-Shalom.
+Simulación de seguimiento de trayectorias aéreas mediante filtros de Kalman lineales con modelos CV y CA. Las medidas provienen de un radar en coordenadas polares (rho, theta).
 
 ## Características
 
@@ -25,9 +25,18 @@ Filtro-kalman/
 ├── main.py
 └── pyproject.toml
 ```
+> [!NOTE]
+> - CV ➜ velocidad constante
+> - CA ➜ aceleración constante
 
+---
 ## Ejecución
 
+Para gestionar dependencias:
+```bash
+uv sync
+```
+Para ejecutar:
 ```bash
 uv run main.py
 ```
@@ -50,10 +59,7 @@ Las gráficas se exportan automáticamente a `resultados/png/` y `resultados/svg
 - Python >= 3.13
 - numpy, seaborn, matplotlib
 
-## Referencias
+## Autores
 
-- Lerro, D. & Bar-Shalom, Y. (1993). *Tracking With Debiased Consistent Converted Measurements Versus EKF*. IEEE Transactions on Aerospace and Electronic Systems.
-
-## Autor
-
-Alejandro - Universidad de León
+- Alejandro Gil Getino - agilge00@estudiantes.unileon.es - Universidad de León
+- Raúl Castedo Flórez - rcastf02@estudiantes.unileon.es - Universidad de León
