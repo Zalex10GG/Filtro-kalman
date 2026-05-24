@@ -353,14 +353,79 @@ def plot_comparacion_cv_ca(pos_reales, estados_cv, estados_ca):
     plt.close(fig)
 
 
+def plot_trazas_covarianza(trazas_cv, trazas_ca):
+    """
+    Genera gráfica de la traza de la covarianza P a lo largo del tiempo para ambos modelos.
 
+    Args:
+        trazas_cv: Vector con la traza de la covarianza de posición P del modelo CV.
+        trazas_ca: Vector con la traza de la covarianza de posición P del modelo CA.
+    """
+    n = len(trazas_cv)
+    tiempos = np.arange(n) * cnfg.DT
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    
+    # Escala logarítmica para ver la convergencia inicial (10^6) y el régimen permanente
+    ax.semilogy(tiempos, trazas_cv, label="Covarianza CV (Traza P_pos)", color=PALETTE[1], linewidth=2.0)
+    ax.semilogy(tiempos, trazas_ca, label="Covarianza CA (Traza P_pos)", color=PALETTE[2], linewidth=2.0)
+    
+    ax.set_xlabel("Tiempo (s)")
+    ax.set_ylabel("Traza de la covarianza de posicion (m^2)")
+    ax.set_title("Evolucion de la traza de la covarianza de posicion P")
+    ax.legend()
+    ax.grid(True, which="both", alpha=0.3)
+    
+    guardar(fig, "trazas_covarianza.png")
+
+
+def plot_ganancias_kalman(gains_cv, gains_ca):
+    """
+    Genera gráfica comparativa de las ganancias de Kalman (K) para posición y velocidad en ambos filtros.
+
+    Args:
+        gains_cv: Secuencia de ganancias de Kalman del modelo CV (n×4×2).
+        gains_ca: Secuencia de ganancias de Kalman del modelo CA (n×6×2).
+    """
+    n = len(gains_cv)
+    tiempos = np.arange(n) * cnfg.DT
+
+    # Extraer ganancias de posición en X (K[0,0]) y velocidad en X (K[2,0])
+    # Debido a la simetría X-Y en el plano cartesiano, las de Y son análogas
+    k_pos_cv = gains_cv[:, 0, 0]
+    k_pos_ca = gains_ca[:, 0, 0]
+
+    k_vel_cv = gains_cv[:, 2, 0]
+    k_vel_ca = gains_ca[:, 2, 0]
+
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+    # Subplot de Ganancia de Posición
+    axes[0].plot(tiempos, k_pos_cv, label="Ganancia Posición CV", color=PALETTE[1], linewidth=2.0)
+    axes[0].plot(tiempos, k_pos_ca, label="Ganancia Posición CA", color=PALETTE[2], linewidth=2.0)
+    axes[0].set_xlabel("Tiempo (s)")
+    axes[0].set_ylabel("Ganancia de Kalman K_p (m/m)")
+    axes[0].set_title("Evolucion de la ganancia de posicion K_p")
+    axes[0].legend()
+    axes[0].grid(True, alpha=0.3)
+
+    # Subplot de Ganancia de Velocidad
+    axes[1].plot(tiempos, k_vel_cv, label="Ganancia Velocidad CV", color=PALETTE[3], linewidth=2.0)
+    axes[1].plot(tiempos, k_vel_ca, label="Ganancia Velocidad CA", color=PALETTE[4], linewidth=2.0)
+    axes[1].set_xlabel("Tiempo (s)")
+    axes[1].set_ylabel("Ganancia de Kalman K_v (1/s)")
+    axes[1].set_title("Evolucion de la ganancia de velocidad K_v")
+    axes[1].legend()
+    axes[1].grid(True, alpha=0.3)
+
+    guardar(fig, "ganancias_kalman.png")
 
 
 def ejecutar():
     """
     Ejecuta todas las visualizaciones y guarda las gráficas.
 
-    Genera 7 gráficas en el directorio 'resultados/':
+    Genera 9 gráficas en el directorio 'resultados/':
     - nodos.png
     - trayectoria_comparacion.png
     - medidas_con_ruido.png
@@ -369,10 +434,12 @@ def ejecutar():
     - velocidad_total.png
     - medidas_radar.png
     - comparacion_cv_ca.png
+    - trazas_covarianza.png
+    - ganancias_kalman.png
 
     También imprime estadísticas resumen en la consola.
     """
-    pos_reales, vel_reales, medidas_radar, estados_cv, estados_ca, trazas_cv, trazas_ca = obj.ejecutar()
+    pos_reales, vel_reales, medidas_radar, estados_cv, estados_ca, trazas_cv, trazas_ca, gains_cv, gains_ca = obj.ejecutar()
 
     plot_nodos()
     plot_trayectoria_comparacion(pos_reales, medidas_radar, estados_cv, estados_ca)
@@ -382,6 +449,8 @@ def ejecutar():
     plot_velocidad_total(vel_reales, estados_cv, estados_ca)
     plot_medidas_radar(medidas_radar)
     plot_comparacion_cv_ca(pos_reales, estados_cv, estados_ca)
+    plot_trazas_covarianza(trazas_cv, trazas_ca)
+    plot_ganancias_kalman(gains_cv, gains_ca)
 
     print("Graficas guardadas en resultados/")
 
@@ -392,6 +461,6 @@ def ejecutar():
     print(f"Posicion real final: x={pos_reales[-1, 0]:.2f}, y={pos_reales[-1, 1]:.2f}")
 
 
-
 if __name__ == "__main__":
     ejecutar()
+

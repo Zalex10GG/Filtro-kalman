@@ -195,19 +195,22 @@ def ejecutar_cv(z_k_seq, R_k_seq, x0, P0, A, H, Q):
         Q: Matriz de covarianza del ruido 4x4.
 
     Returns:
-        tuple: (estados, trazas_p) donde:
+        tuple: (estados, trazas_p, gains) donde:
             - estados: Matriz de tamaño n×4 con los estados estimados [x, y, vx, vy].
             - trazas_p: Vector de tamaño n con la traza de la covarianza P en cada paso.
+            - gains: Matriz de tamaño n×4×2 con las ganancias de Kalman en cada paso.
     """
     kf = klmn.KalmanFilter(A, H, Q, x0, P0)
     estados = []
-    trazas_p = []
+    trazas_p = [np.trace(P0[:2, :2])]
+    gains = []
     for z, R in zip(z_k_seq, R_k_seq):
         kf.predict()
         kf.update(z, R)
         estados.append(kf.x.copy())
         trazas_p.append(np.trace(kf.P[:2, :2]))
-    return np.array(estados), np.array(trazas_p)
+        gains.append(kf.K.copy())
+    return np.array(estados), np.array(trazas_p), np.array(gains)
 
 
 def ejecutar_ca(z_k_seq, R_k_seq, x0, P0, A, H, Q):
@@ -224,19 +227,22 @@ def ejecutar_ca(z_k_seq, R_k_seq, x0, P0, A, H, Q):
         Q: Matriz de covarianza del ruido 6x6.
 
     Returns:
-        tuple: (estados, trazas_p) donde:
+        tuple: (estados, trazas_p, gains) donde:
             - estados: Matriz de tamaño n×6 con los estados estimados [x, y, vx, vy, ax, ay].
-            - trazas_p: Vector de tamaño n con la traza de la covarianza P en cada paso.
+            - trazas_p: Vector de tamaño n + 1 con la traza de la covarianza P en cada paso (incluyendo P0).
+            - gains: Matriz de tamaño n×6×2 con las ganancias de Kalman en cada paso.
     """
     kf = klmn.KalmanFilter(A, H, Q, x0, P0)
     estados = []
-    trazas_p = []
+    trazas_p = [np.trace(P0[:2, :2])]
+    gains = []
     for z, R in zip(z_k_seq, R_k_seq):
         kf.predict()
         kf.update(z, R)
         estados.append(kf.x.copy())
         trazas_p.append(np.trace(kf.P[:2, :2]))
-    return np.array(estados), np.array(trazas_p)
+        gains.append(kf.K.copy())
+    return np.array(estados), np.array(trazas_p), np.array(gains)
 
 
 def ejecutar():
@@ -244,7 +250,7 @@ def ejecutar():
     Ejecuta el proceso completo: genera datos y ejecuta ambos filtros Kalman.
 
     Returns:
-        tuple: (pos_reales, vel_reales, medidas_radar, estados_cv, estados_ca, trazas_cv, trazas_ca) con:
+        tuple: (pos_reales, vel_reales, medidas_radar, estados_cv, estados_ca, trazas_cv, trazas_ca, gains_cv, gains_ca) con:
             - pos_reales: Matriz de tamaño n×2 con posiciones reales.
             - vel_reales: Vector de tamaño n con velocidades reales.
             - medidas_radar: Matriz de tamaño n×2 con medidas del radar.
@@ -252,6 +258,8 @@ def ejecutar():
             - estados_ca: Matriz de tamaño n×6 con estimaciones del modelo CA.
             - trazas_cv: Vector de tamaño n con traza de P del modelo CV.
             - trazas_ca: Vector de tamaño n con traza de P del modelo CA.
+            - gains_cv: Matriz de ganancias del modelo CV (n×4×2).
+            - gains_ca: Matriz de ganancias del modelo CA (n×6×2).
     """
     # Generar datos
     pos_reales, vel_reales, medidas_radar = preparar_datos()
@@ -265,11 +273,12 @@ def ejecutar():
     # Ejecutar modelo CV
     x0_cv, P0_cv = inicializar_estado_cv(pos_ratas, pos_nublo, cnfg.V1_MS)
     A_cv, H_cv, Q_cv = construir_matrices_cv()
-    estados_cv, trazas_cv = ejecutar_cv(z_k_seq, R_k_seq, x0_cv, P0_cv, A_cv, H_cv, Q_cv)
+    estados_cv, trazas_cv, gains_cv = ejecutar_cv(z_k_seq, R_k_seq, x0_cv, P0_cv, A_cv, H_cv, Q_cv)
 
     # Ejecutar modelo CA
     x0_ca, P0_ca = inicializar_estado_ca(pos_ratas, pos_nublo, cnfg.V1_MS)
     A_ca, H_ca, Q_ca = construir_matrices_ca()
-    estados_ca, trazas_ca = ejecutar_ca(z_k_seq, R_k_seq, x0_ca, P0_ca, A_ca, H_ca, Q_ca)
+    estados_ca, trazas_ca, gains_ca = ejecutar_ca(z_k_seq, R_k_seq, x0_ca, P0_ca, A_ca, H_ca, Q_ca)
 
-    return pos_reales, vel_reales, medidas_radar, estados_cv, estados_ca, trazas_cv, trazas_ca
+    return pos_reales, vel_reales, medidas_radar, estados_cv, estados_ca, trazas_cv, trazas_ca, gains_cv, gains_ca
+

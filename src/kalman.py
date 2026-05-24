@@ -59,6 +59,7 @@ class KalmanFilter:
         S = self.H @ self.P @ self.H.T + R
         # Ganancia de Kalman
         K = self.P @ self.H.T @ np.linalg.solve(S, np.eye(S.shape[0]))
+        self.K = K.copy()
         # Innovación (error de medición)
         y = z - self.H @ self.x
         # Actualización del estado
@@ -66,3 +67,4 @@ class KalmanFilter:
         # Actualización de la covarianza (forma de Joseph real)
         I_KH = np.eye(len(self.x)) - K @ self.H
         self.P = I_KH @ self.P @ I_KH.T + K @ R @ K.T
+        return K
