@@ -23,37 +23,39 @@ def calcular_z_y_r(rho_m, theta_m):
 
     Args:
         rho_m: Distancia medida (r_m) en metros.
-        theta_m: Ángulo medido (θ_m) en radianes.
+        theta_m: Ángulo medido (θ_m) en radianes (relativo al Norte Magnético).
 
     Returns:
         tuple: (z_k, R_k) donde:
-            - z_k: Vector [x, y] en metros (medida desesgada en Cartesianas).
+            - z_k: Vector [x, y] en metros (medida desesgada en Cartesianas geográficas).
             - R_k: Matriz de covarianza de tamaño 2×2 de la medida convertida.
     """
-    # 1. Convertir medidas polares a Cartesianas (usando convención de azimut radar)
-    x_m = rho_m * np.sin(theta_m)
-    y_m = rho_m * np.cos(theta_m)
+    # 1. Convertir la medida de azimut magnético a azimut verdadero (geográfico)
+    theta_geo = theta_m + cnfg.DECLINACION_MAG
+
+    # Convertir medidas polares a Cartesianas (usando convención de azimut radar y theta_geo)
+    x_m = rho_m * np.sin(theta_geo)
+    y_m = rho_m * np.cos(theta_geo)
 
     # Parámetros de ruido del radar
     drho = cnfg.SIGMA_RHO  # σ_r
     dtheta = cnfg.SIGMA_THETA  # σ_θ
     stheta2 = dtheta ** 2  # σ_θ²
 
-    # 2. Calcular sesgo μ_a según Ecuación 12 de Lerro & Bar-Shalom
-    # μ_a = [r_m sin(θ_m)(e^{-σ²} - e^{-σ²/2}), r_m cos(θ_m)(e^{-σ²} - e^{-σ²/2})]
+    # 2. Calcular sesgo μ_a según Ecuación 12 de Lerro & Bar-Shalom usando theta_geo
     exp_neg = np.exp(-stheta2)
     exp_neg_half = np.exp(-stheta2 / 2)
     bias_factor = exp_neg - exp_neg_half
     mu_a = np.array([
-        rho_m * np.sin(theta_m) * bias_factor,
-        rho_m * np.cos(theta_m) * bias_factor
+        rho_m * np.sin(theta_geo) * bias_factor,
+        rho_m * np.cos(theta_geo) * bias_factor
     ])
 
-    # 3. Calcular covarianza R_a según Ecuaciones 13a-13c de Lerro & Bar-Shalom
+    # 3. Calcular covarianza R_a según Ecuaciones 13a-13c de Lerro & Bar-Shalom usando theta_geo
     # Para mantener la matemática original (donde θ era medido desde el eje X),
     # intercambiamos sin y cos para la convención de Azimut
-    c = np.sin(theta_m)
-    s = np.cos(theta_m)
+    c = np.sin(theta_geo)
+    s = np.cos(theta_geo)
     c2 = c ** 2
     s2 = s ** 2
 

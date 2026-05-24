@@ -28,8 +28,8 @@ PTO_NUBLO = "423958N 0045920W"
 #: Coordenadas DMS del waypoint ROVAK (punto final de la trayectoria).
 PTO_ROVAK = "424431N 0055123W"
 
-#: Altitud de vuelo de las aeronaves en metros (FL100 = 10000 ft).
-H_VUELO = 10000.0 * 0.3048
+#: Altitud de vuelo de las aeronaves en metros (FL330 = 33000 ft).
+H_VUELO = 33000.0 * 0.3048
 
 #: Paso de tiempo de simulación en segundos. Cada 4s se procesa una medida del radar.
 DT = 4.0
@@ -41,7 +41,7 @@ V1_MS = 410 * 0.51444
 V2_MS = 510 * 0.51444
 
 #: Aceleración del avión en m/s² durante la fase de aceleración entre V1 y V2.
-ACCEL = 10.0
+ACCEL = 1.0
 
 #: Desviación estándar del error de distancia (rho) del radar en metros.
 SIGMA_RHO = 30.0

@@ -97,15 +97,7 @@ def geocentric_to_local(P_geo, lat_ref, lon_ref, h_ref):
         [np.cos(lat_ref)*np.cos(lon_ref),  np.cos(lat_ref)*np.sin(lon_ref), np.sin(lat_ref)]
     ])
     P_local = S @ (P_geo - T)
-    
-    # Aplicar declinación magnética para alinear el eje Y con el Norte Magnético
-    D = cnfg.DECLINACION_MAG
-    R_mag = np.array([
-        [np.cos(D), -np.sin(D), 0.0],
-        [np.sin(D),  np.cos(D), 0.0],
-        [0.0,        0.0,       1.0]
-    ])
-    return R_mag @ P_local
+    return P_local
 
 
 def cartesian_to_radar(x, y):

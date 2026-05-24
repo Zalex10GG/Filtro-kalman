@@ -130,17 +130,20 @@ def generar_medidas_radar(pos_reales):
     """
     x_real = pos_reales[:, 0]
     y_real = pos_reales[:, 1]
-    # Convertir a coordenadas polares
-    rho_real, theta_real = trns.cartesian_to_radar(x_real, y_real)
-    medidas_reales = np.column_stack((rho_real, theta_real))
+    # Convertir a coordenadas polares (geográficas/verdaderas)
+    rho_real, theta_real_geo = trns.cartesian_to_radar(x_real, y_real)
+    
+    # El radar mide respecto al Norte Magnético, por lo que restamos la declinación magnética
+    theta_real_mag = theta_real_geo - cnfg.DECLINACION_MAG
+    medidas_reales = np.column_stack((rho_real, theta_real_mag))
 
     # Generar ruido gaussiano independiente para rho y theta
     ruido_rho = np.random.normal(0, cnfg.SIGMA_RHO, len(rho_real))
-    ruido_theta = np.random.normal(0, cnfg.SIGMA_THETA, len(theta_real))
+    ruido_theta = np.random.normal(0, cnfg.SIGMA_THETA, len(theta_real_mag))
 
     # Aplicar ruido a las medidas
     rho_medido = rho_real + ruido_rho
-    theta_medido = theta_real + ruido_theta
+    theta_medido = theta_real_mag + ruido_theta
     medidas_radar = np.column_stack((rho_medido, theta_medido))
 
     return medidas_radar, medidas_reales

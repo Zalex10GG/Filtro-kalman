@@ -90,7 +90,7 @@ def inicializar_estado_ca(pos_ratas, pos_nublo, v_cruzero):
     return x0, P0
 
 
-def construir_matrizes_cv():
+def construir_matrices_cv():
     """
     Construye las matrices del modelo CV (Constant Velocity).
 
@@ -134,7 +134,7 @@ def construir_matrizes_cv():
     return A, H, Q
 
 
-def construir_matrizes_ca():
+def construir_matrices_ca():
     """
     Construye las matrices del modelo CA (Constant Acceleration).
 
@@ -264,12 +264,12 @@ def ejecutar():
 
     # Ejecutar modelo CV
     x0_cv, P0_cv = inicializar_estado_cv(pos_ratas, pos_nublo, cnfg.V1_MS)
-    A_cv, H_cv, Q_cv = construir_matrizes_cv()
+    A_cv, H_cv, Q_cv = construir_matrices_cv()
     estados_cv, trazas_cv = ejecutar_cv(z_k_seq, R_k_seq, x0_cv, P0_cv, A_cv, H_cv, Q_cv)
 
     # Ejecutar modelo CA
     x0_ca, P0_ca = inicializar_estado_ca(pos_ratas, pos_nublo, cnfg.V1_MS)
-    A_ca, H_ca, Q_ca = construir_matrizes_ca()
+    A_ca, H_ca, Q_ca = construir_matrices_ca()
     estados_ca, trazas_ca = ejecutar_ca(z_k_seq, R_k_seq, x0_ca, P0_ca, A_ca, H_ca, Q_ca)
 
     return pos_reales, vel_reales, medidas_radar, estados_cv, estados_ca, trazas_cv, trazas_ca

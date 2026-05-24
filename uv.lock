@@ -86,7 +86,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "numpy", specifier = "==2.4.4" },
+    { name = "numpy", specifier = ">=2.0.0" },
     { name = "pypdf", specifier = ">=6.10.2" },
     { name = "seaborn", specifier = "==0.13.2" },
 ]
