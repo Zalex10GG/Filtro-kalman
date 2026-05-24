@@ -108,9 +108,10 @@ def plot_trayectorias(pos_reales, medidas_radar, estados_cv, estados_ca):
         estados_cv: Matriz de tamaño n×4 con estimaciones del modelo CV.
         estados_ca: Matriz de tamaño n×6 con estimaciones del modelo CA.
     """
-    # Convertir medidas radar de polares a Cartesianas (usando convención de azimut)
-    x_radar = medidas_radar[:, 0] * np.sin(medidas_radar[:, 1])
-    y_radar = medidas_radar[:, 0] * np.cos(medidas_radar[:, 1])
+    # Convertir medidas radar de polares magnéticas a Cartesianas geográficas (sumando declinación)
+    theta_geo = medidas_radar[:, 1] + cnfg.DECLINACION_MAG
+    x_radar = medidas_radar[:, 0] * np.sin(theta_geo)
+    y_radar = medidas_radar[:, 0] * np.cos(theta_geo)
 
     fig, ax = plt.subplots(figsize=(12, 10))
 
@@ -135,7 +136,7 @@ def plot_trayectorias(pos_reales, medidas_radar, estados_cv, estados_ca):
 
 def plot_trayectoria_comparacion(pos_reales, medidas_radar, estados_cv, estados_ca):
     """
-    Genera gráfica de trayectorias incluyendo el mejor filtro seleccionado por instante.
+    Genera gráfica de trayectorias para comparar ambos filtros Kalman.
 
     Args:
         pos_reales: Matriz de tamaño n×2 con posiciones reales.
@@ -143,22 +144,10 @@ def plot_trayectoria_comparacion(pos_reales, medidas_radar, estados_cv, estados_
         estados_cv: Matriz de tamaño n×4 con estimaciones del modelo CV.
         estados_ca: Matriz de tamaño n×6 con estimaciones del modelo CA.
     """
-    # Convertir medidas radar de polares a Cartesianas (usando convención de azimut)
-    x_radar = medidas_radar[:, 0] * np.sin(medidas_radar[:, 1])
-    y_radar = medidas_radar[:, 0] * np.cos(medidas_radar[:, 1])
-
-    # Calcular errores de posición para cada filtro
-    err_cv = np.linalg.norm(pos_reales[:, :2] - estados_cv[:, :2], axis=1)
-    err_ca = np.linalg.norm(pos_reales[:, :2] - estados_ca[:, :2], axis=1)
-
-    # Seleccionar el filtro con menor error en cada instante
-    mejor_cv = err_cv < err_ca
-    estados_mejor = np.zeros_like(pos_reales)
-    for i in range(len(pos_reales)):
-        if mejor_cv[i]:
-            estados_mejor[i] = estados_cv[i, :2]
-        else:
-            estados_mejor[i] = estados_ca[i, :2]
+    # Convertir medidas radar de polares magnéticas a Cartesianas geográficas (sumando declinación)
+    theta_geo = medidas_radar[:, 1] + cnfg.DECLINACION_MAG
+    x_radar = medidas_radar[:, 0] * np.sin(theta_geo)
+    y_radar = medidas_radar[:, 0] * np.cos(theta_geo)
 
     fig, ax = plt.subplots(figsize=(12, 10))
 
@@ -180,6 +169,7 @@ def plot_trayectoria_comparacion(pos_reales, medidas_radar, estados_cv, estados_
     guardar(fig, "trayectoria_comparacion.png")
 
 
+
 def plot_medidas_con_ruido(pos_reales, medidas_radar):
     """
     Genera gráficas comparando valores reales vs medidos de rho y theta.
@@ -195,7 +185,7 @@ def plot_medidas_con_ruido(pos_reales, medidas_radar):
     theta_real = np.arctan2(x_real, y_real)
 
     rho_medido = medidas_radar[:, 0]
-    theta_medido = medidas_radar[:, 1]
+    theta_medido = medidas_radar[:, 1] + cnfg.DECLINACION_MAG
 
     fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
@@ -247,43 +237,7 @@ def plot_error_posicion(pos_reales, estados_cv, estados_ca):
     guardar(fig, "error_posicion.png")
 
 
-def plot_trayectorias_optimas(pos_reales, estados_cv, estados_ca, trazas_cv, trazas_ca):
-    """
-    Genera gráfica comparando trayectoria real con la óptima (menor traza de P).
 
-    La trayectoria óptima se construye seleccionando en cada instante el filtro
-    con menor traza de covarianza P (menor incertidumbre total), sin usar la
-    posición real (que no estaría disponible en un sistema real).
-
-    Args:
-        pos_reales: Matriz de tamaño n×2 con posiciones reales.
-        estados_cv: Matriz de tamaño n×4 con estimaciones del modelo CV.
-        estados_ca: Matriz de tamaño n×6 con estimaciones del modelo CA.
-        trazas_cv: Vector de tamaño n con traza de P del modelo CV.
-        trazas_ca: Vector de tamaño n con traza de P del modelo CA.
-    """
-    # Seleccionar filtro con menor traza de P en cada instante
-    mejor_cv = trazas_cv < trazas_ca
-
-    estados_opt = np.zeros_like(pos_reales)
-    for i in range(len(pos_reales)):
-        if mejor_cv[i]:
-            estados_opt[i] = estados_cv[i, :2]
-        else:
-            estados_opt[i] = estados_ca[i, :2]
-
-    fig, ax = plt.subplots(figsize=(12, 10))
-    ax.plot(pos_reales[:, 0], pos_reales[:, 1],
-            label="Trayectoria real", color=PALETTE[0], linewidth=2.5)
-    ax.plot(estados_opt[:, 0], estados_opt[:, 1],
-            label="Trayectoria optima", color=PALETTE[3], linewidth=2.5)
-    ax.set_xlabel("X (m)")
-    ax.set_ylabel("Y (m)")
-    ax.set_title("Trayectoria real vs Trayectoria optima")
-    ax.legend(loc='upper left')
-    ax.grid(True, alpha=0.3)
-    ax.margins(0.05)
-    guardar(fig, "trayectorias_optimas.png")
 
 
 def plot_velocidades(estados_cv, estados_ca):
@@ -315,20 +269,14 @@ def plot_velocidades(estados_cv, estados_ca):
 MS_TO_KNOTS = 1.94384
 
 
-def plot_velocidad_total(pos_reales, vel_reales, estados_cv, estados_ca, trazas_cv, trazas_ca):
+def plot_velocidad_total(vel_reales, estados_cv, estados_ca):
     """
-    Genera gráfica comparando la velocidad total real vs estimada.
-
-    Incluye la velocidad del filtro con menor traza de P (menor incertidumbre)
-    en cada instante.
+    Genera gráfica comparando la velocidad total real vs estimada de cada filtro.
 
     Args:
-        pos_reales: Matriz de tamaño n×2 con posiciones reales.
         vel_reales: Vector de tamaño n con velocidades reales en m/s.
         estados_cv: Matriz de tamaño n×4 con estimaciones del modelo CV.
         estados_ca: Matriz de tamaño n×6 con estimaciones del modelo CA.
-        trazas_cv: Vector de tamaño n con traza de P del modelo CV.
-        trazas_ca: Vector de tamaño n con traza de P del modelo CA.
     """
     n = len(vel_reales)
     tiempos = np.arange(n) * cnfg.DT
@@ -338,16 +286,6 @@ def plot_velocidad_total(pos_reales, vel_reales, estados_cv, estados_ca, trazas_
     v_total_ca = np.sqrt(estados_ca[:, 2]**2 + estados_ca[:, 3]**2) * MS_TO_KNOTS
     v_real = vel_reales * MS_TO_KNOTS
 
-    # Seleccionar velocidad del filtro con menor traza de P en cada instante
-    mejor_cv = trazas_cv < trazas_ca
-    v_total_opt_p = np.where(mejor_cv, v_total_cv, v_total_ca)
-
-    # Seleccionar velocidad del filtro con menor error real
-    err_cv = np.linalg.norm(pos_reales[:, :2] - estados_cv[:, :2], axis=1)
-    err_ca = np.linalg.norm(pos_reales[:, :2] - estados_ca[:, :2], axis=1)
-    mejor_err_cv = err_cv < err_ca
-    v_total_opt_err = np.where(mejor_err_cv, v_total_cv, v_total_ca)
-
     fig, ax = plt.subplots(figsize=(12, 6))
     ax.plot(tiempos, v_real,
             label="Velocidad real", color=PALETTE[0], linewidth=2.5)
@@ -355,10 +293,6 @@ def plot_velocidad_total(pos_reales, vel_reales, estados_cv, estados_ca, trazas_
             label="Kalman CV", color=PALETTE[1], linewidth=1.5, alpha=0.7)
     ax.plot(tiempos, v_total_ca, '--',
             label="Kalman CA", color=PALETTE[2], linewidth=1.5, alpha=0.7)
-    ax.plot(tiempos, v_total_opt_p,
-            label="Velocidad (Selección por menor covarianza de posición)", color=PALETTE[3], linewidth=2.5)
-    ax.plot(tiempos, v_total_opt_err, ':',
-            label="Velocidad (Selección por menor error real)", color=PALETTE[4], linewidth=2.5, alpha=0.9)
     # Líneas horizontales para V1 y V2
     ax.axhline(cnfg.V1_MS * MS_TO_KNOTS, color='gray', linestyle=':', alpha=0.7,
                label=f"V1 = {cnfg.V1_MS * MS_TO_KNOTS:.0f} kt")
@@ -415,57 +349,19 @@ def plot_comparacion_cv_ca(pos_reales, estados_cv, estados_ca):
     ax.set_ylabel("Error (m)")
     ax.set_title("Comparacion de error CV vs CA")
     ax.legend()
-def plot_comparacion_criterios_seleccion(pos_reales, estados_cv, estados_ca, trazas_cv, trazas_ca):
-    """
-    Genera una gráfica comparando la trayectoria real con los dos criterios de selección:
-    1. Selección teórica basada en la mínima covarianza de posición P.
-    2. Selección física ideal basada en el menor error real contra la verdad fundamental.
-    """
-    # 1. Reconstruir trayectoria por Criterio P (mínima traza de covarianza de posición)
-    mejor_p_cv = trazas_cv < trazas_ca
-    estados_opt_p = np.zeros_like(pos_reales)
-    for i in range(len(pos_reales)):
-        if mejor_p_cv[i]:
-            estados_opt_p[i] = estados_cv[i, :2]
-        else:
-            estados_opt_p[i] = estados_ca[i, :2]
+    guardar(fig, "comparacion_cv_ca.png")
+    plt.close(fig)
 
-    # 2. Reconstruir trayectoria por Criterio Error Real
-    err_cv = np.linalg.norm(pos_reales[:, :2] - estados_cv[:, :2], axis=1)
-    err_ca = np.linalg.norm(pos_reales[:, :2] - estados_ca[:, :2], axis=1)
-    mejor_err_cv = err_cv < err_ca
-    estados_opt_err = np.zeros_like(pos_reales)
-    for i in range(len(pos_reales)):
-        if mejor_err_cv[i]:
-            estados_opt_err[i] = estados_cv[i, :2]
-        else:
-            estados_opt_err[i] = estados_ca[i, :2]
 
-    fig, ax = plt.subplots(figsize=(12, 10))
 
-    ax.plot(pos_reales[:, 0], pos_reales[:, 1],
-            label="Trayectoria real (Ground Truth)", color=PALETTE[0], linewidth=3)
-    ax.plot(estados_opt_p[:, 0], estados_opt_p[:, 1], '--',
-            label="Selección por P (Covarianza Teórica)", color=PALETTE[2], linewidth=1.8, alpha=0.9)
-    ax.plot(estados_opt_err[:, 0], estados_opt_err[:, 1], ':',
-            label="Selección por Error Real (Física)", color=PALETTE[3], linewidth=2.5, alpha=0.9)
-
-    ax.set_xlabel("X (m)")
-    ax.set_ylabel("Y (m)")
-    ax.set_title("Comparación de Criterios de Selección de Filtro")
-    ax.legend(loc='upper left')
-    ax.grid(True, alpha=0.3)
-    ax.margins(0.05)
-    guardar(fig, "comparacion_criterios.png")
 
 
 def ejecutar():
     """
     Ejecuta todas las visualizaciones y guarda las gráficas.
 
-    Genera 9 gráficas en el directorio 'resultados/':
+    Genera 7 gráficas en el directorio 'resultados/':
     - nodos.png
-    - trayectorias_optimas.png
     - trayectoria_comparacion.png
     - medidas_con_ruido.png
     - error_posicion.png
@@ -473,22 +369,19 @@ def ejecutar():
     - velocidad_total.png
     - medidas_radar.png
     - comparacion_cv_ca.png
-    - comparacion_criterios.png
 
     También imprime estadísticas resumen en la consola.
     """
     pos_reales, vel_reales, medidas_radar, estados_cv, estados_ca, trazas_cv, trazas_ca = obj.ejecutar()
 
     plot_nodos()
-    plot_trayectorias_optimas(pos_reales, estados_cv, estados_ca, trazas_cv, trazas_ca)
     plot_trayectoria_comparacion(pos_reales, medidas_radar, estados_cv, estados_ca)
     plot_medidas_con_ruido(pos_reales, medidas_radar)
     plot_error_posicion(pos_reales, estados_cv, estados_ca)
     plot_velocidades(estados_cv, estados_ca)
-    plot_velocidad_total(pos_reales, vel_reales, estados_cv, estados_ca, trazas_cv, trazas_ca)
+    plot_velocidad_total(vel_reales, estados_cv, estados_ca)
     plot_medidas_radar(medidas_radar)
     plot_comparacion_cv_ca(pos_reales, estados_cv, estados_ca)
-    plot_comparacion_criterios_seleccion(pos_reales, estados_cv, estados_ca, trazas_cv, trazas_ca)
 
     print("Graficas guardadas en resultados/")
 
@@ -497,6 +390,7 @@ def ejecutar():
     print(f"Ultima posicion estimada CV: x={estados_cv[-1, 0]:.2f}, y={estados_cv[-1, 1]:.2f}")
     print(f"Ultima posicion estimada CA: x={estados_ca[-1, 0]:.2f}, y={estados_ca[-1, 1]:.2f}")
     print(f"Posicion real final: x={pos_reales[-1, 0]:.2f}, y={pos_reales[-1, 1]:.2f}")
+
 
 
 if __name__ == "__main__":
